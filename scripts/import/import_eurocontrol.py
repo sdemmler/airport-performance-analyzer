@@ -45,6 +45,11 @@ for y in YEARS_LIST:
 df_apt_dly["FLT_DATE"] = pd.to_datetime(df_apt_dly["FLT_DATE"], errors="coerce")
 df_apt_dly["FLT_DATE"] = df_apt_dly["FLT_DATE"].dt.tz_localize(None)
 
+df_apt_dly["STATE_NAME"] = df_apt_dly["STATE_NAME"].replace({
+    "Turkey": "Türkiye",
+    "Turkiye": "Türkiye"
+})
+
 df_apt_dly = df_apt_dly.drop(columns="ATFM_VERSION")
 
 df_apt_dly.columns = [col.lower() for col in df_apt_dly.columns]
@@ -110,6 +115,11 @@ for y in YEARS_LIST:
 
 df_apt_tfc["FLT_DATE"] = pd.to_datetime(df_apt_tfc["FLT_DATE"], errors="coerce")
 df_apt_tfc["FLT_DATE"] = df_apt_tfc["FLT_DATE"].dt.tz_localize(None)
+
+df_apt_tfc["STATE_NAME"] = df_apt_tfc["STATE_NAME"].replace({
+    "Turkey": "Türkiye",
+    "Turkiye": "Türkiye"
+})
 
 df_apt_tfc = df_apt_tfc.drop(columns=["FLT_DEP_IFR_2", "FLT_ARR_IFR_2", "FLT_TOT_IFR_2"])
 
