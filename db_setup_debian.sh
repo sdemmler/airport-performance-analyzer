@@ -35,6 +35,9 @@ DATABASE_URL=postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME
 EOF
 echo "   .env created at scripts/import/.env"
 
+echo ">> Copying .env file..."
+cp scrips/import/.env  notebooks/
+echo "   .env created at notebooks/.env for notebook use"
 # --- Step 5: Install Python dependencies ---
 echo ">> Setting up Python virtual environment..."
 python3 -m venv .venv
