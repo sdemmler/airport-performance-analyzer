@@ -37,7 +37,8 @@ echo "   .env created at scripts/import/.env"
 
 echo ">> Copying .env file..."
 cp scrips/import/.env  notebooks/
-echo "   .env created at notebooks/.env for notebook use"
+echo "   .env created at notebooks/.env"
+
 # --- Step 5: Install Python dependencies ---
 echo ">> Setting up Python virtual environment..."
 python3 -m venv .venv
