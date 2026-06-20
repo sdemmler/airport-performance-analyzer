@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import plotly.express as px
 from theme import apply_theme
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 # Page definition -- only for main page
 st.set_page_config(
@@ -140,6 +141,11 @@ def home():
                 ORDER BY total_movements DESC
                 """
                 )
+        
+        df_map['airport_name'] = df_map['airport_name'].apply(
+        lambda x: x.encode('latin-1').decode('utf-8') if isinstance(x, str) else x
+        )
+
 
         fig = px.scatter_geo(
             df_map,
@@ -179,7 +185,9 @@ def home():
         )
         show(fig)
 
-        
+        st.divider()
+
+
         st.subheader(f"🇪🇺 ATFM delay per arrival by airport ({year_selection}).")
 
         with st.spinner("Loading data ..."):
@@ -207,6 +215,10 @@ def home():
                 ORDER BY delay_per_arrival DESC
                 """
             )
+
+        df_map_delay['airport_name'] = df_map_delay['airport_name'].apply(
+        lambda x: x.encode('latin-1').decode('utf-8') if isinstance(x, str) else x
+        )
 
         fig2 = px.scatter_geo(
             df_map_delay,
@@ -247,38 +259,50 @@ def home():
         )
         show(fig2)
 
-    
-        choro_toggle = st.toggle(f"Show ATFM delays per flight for {year_selection}")
+        st.divider()
+        
+        choro_toggle = st.toggle(f"Interested in Airport vs. En-Route ATFM Delay on a country-level?")
         
         if choro_toggle:
             
-            st.subheader(f"En-route ATFM delays per flight by country — ANSP/AUA level ({year_selection})")
+            st.subheader(f"Airport vs. En-Route ATFM Delay by Country for {year_selection}")
 
-            df_choro = run_query(f"""
-                SELECT
-                    r.iso_country AS iso_a2,
-                    r.country_name,
-                    SUM(e.dly_ert_1) AS total_delay_min,
-                    SUM(e.flt_ert_1) AS total_flights,
-                    ROUND(SUM(e.dly_ert_1) / NULLIF(SUM(e.flt_ert_1), 0), 4) AS delay_per_flight,
-                    ROUND(SUM(e.flt_ert_1_dly_15)::NUMERIC
-                        / NULLIF(SUM(e.flt_ert_1), 0) * 100, 2) AS pct_delayed_15min,
-                    ROUND(SUM(e.dly_ert_c_1) / NULLIF(SUM(e.dly_ert_1), 0) * 100, 1) AS pct_atc_capacity,
-                    ROUND(SUM(e.dly_ert_s_1) / NULLIF(SUM(e.dly_ert_1), 0) * 100, 1) AS pct_atc_staffing,
-                    ROUND(SUM(e.dly_ert_w_1) / NULLIF(SUM(e.dly_ert_1), 0) * 100, 1) AS pct_weather,
-                    ROUND(SUM(e.dly_ert_m_1) / NULLIF(SUM(e.dly_ert_1), 0) * 100, 1) AS pct_military,
-                    ROUND(SUM(e.dly_ert_r_1) / NULLIF(SUM(e.dly_ert_1), 0) * 100, 1) AS pct_routeing
-                FROM fact_enroute_delay e
-                JOIN dim_entity_region r ON e.entity_name = r.entity_name
-                WHERE EXTRACT(year FROM e.flt_date) = {year_selection}
-                AND e.entity_type = 'ANSP (AUA)'
-                AND e.dly_ert_1 IS NOT NULL
-                GROUP BY r.iso_country, r.country_name
-                ORDER BY delay_per_flight DESC
-                """
+            # ── Airport delay per arrival by country ─────────────
+            df_apt_map = run_query("""
+            SELECT
+                d.state_name,
+                a.iso_country AS iso_a2,
+                SUM(d.flt_arr_1) AS total_arrivals,
+                SUM(d.dly_apt_arr_1) AS total_delay_min,
+                ROUND(SUM(d.dly_apt_arr_1) / NULLIF(SUM(d.flt_arr_1), 0), 4) AS delay_per_arrival
+            FROM fact_airport_delay d
+            JOIN dim_airport a ON d.apt_icao = a.ident
+            WHERE d.year = 2025
+            AND d.dly_apt_arr_1 IS NOT NULL
+            GROUP BY d.state_name, a.iso_country
+            ORDER BY delay_per_arrival DESC
+            """
             )
-             
-            # ISO-2 → ISO-3
+
+            # ── En-route delay per flight by country ───────────────
+            df_ert_map = run_query("""
+            SELECT
+                r.iso_country AS iso_a2,
+                r.country_name,
+                SUM(e.dly_ert_1) AS total_delay_min,
+                SUM(e.flt_ert_1) AS total_flights,
+                ROUND(SUM(e.dly_ert_1) / NULLIF(SUM(e.flt_ert_1), 0), 4) AS delay_per_flight
+            FROM fact_enroute_delay e
+            JOIN dim_entity_region r ON e.entity_name = r.entity_name
+            WHERE e.year = 2025
+            AND e.entity_type = 'ANSP (AUA)'
+            AND e.dly_ert_1 IS NOT NULL
+            GROUP BY r.iso_country, r.country_name
+            ORDER BY delay_per_flight DESC
+            """
+            )
+            
+            # ── ISO-2 → ISO-3 Mapping ────────────────────────────────────
             ISO2_TO_ISO3 = {
                 'AL':'ALB','AM':'ARM','AT':'AUT','AZ':'AZE','BA':'BIH','BE':'BEL',
                 'BG':'BGR','BY':'BLR','CH':'CHE','CY':'CYP','CZ':'CZE','DE':'DEU',
@@ -289,49 +313,69 @@ def home():
                 'PT':'PRT','RO':'ROU','RS':'SRB','SE':'SWE','SI':'SVN','SK':'SVK',
                 'TR':'TUR','UA':'UKR',
             }
+            df_apt_map['iso_a3'] = df_apt_map['iso_a2'].map(ISO2_TO_ISO3)
+            df_ert_map['iso_a3'] = df_ert_map['iso_a2'].map(ISO2_TO_ISO3)
 
-            df_choro['iso_a3'] = df_choro['iso_a2'].map(ISO2_TO_ISO3)
+            # ── Plot ─────────────────────────────────────────────────────────────
 
-            fig_choro = px.choropleth(
-            df_choro.dropna(subset=['iso_a3']),
-            locations='iso_a3',
-            color='delay_per_flight',
-            hover_name='country_name',
-            hover_data={
-                'iso_a3':            False,
-                'iso_a2':            False,
-                'delay_per_flight':  ':.4f',
-                'total_delay_min':   ':,.0f',
-                'total_flights':     ':,.0f',
-                'pct_delayed_15min': ':.1f',
-                'pct_atc_capacity':  ':.1f',
-                'pct_atc_staffing':  ':.1f',
-                'pct_weather':       ':.1f',
-                'pct_military':      ':.1f',
-                'pct_routeing':      ':.1f',
-            },
-            color_continuous_scale='Reds',
-            scope='europe',
-            #title='En-route ATFM delays per flight by country — ANSP/AUA level (2025)',
-            labels={'delay_per_flight': 'min / flight'},
+            fig = make_subplots(
+                rows=1, cols=2,
+                specs=[[{"type": "choropleth"}, {"type": "choropleth"}]],
+                subplot_titles=[
+                    "En-Route ATFM Delay per Flight (min)",
+                    "Airport ATFM Delay per Arrival (min)"
+                ]
             )
-            fig_choro.update_layout(
-                coloraxis_colorbar=dict(title='min / flight'),
+
+            geo_layout = dict(
+                showland=True,       landcolor='#d0d0d0',
+                showocean=True,      oceancolor='#dceefb',
+                showcoastlines=True, coastlinecolor='white',
+                showcountries=True,  countrycolor='white',
+                projection_type='natural earth',
+                center=dict(lat=52, lon=12),
+                lataxis_range=[34, 72],
+                lonaxis_range=[-25, 45],
+            )
+
+            # geo (links): En-Route
+            fig.add_trace(go.Choropleth(
+                locations=df_ert_map['iso_a3'],
+                z=df_ert_map['delay_per_flight'],
+                text=df_ert_map['country_name'],
+                colorscale='Blues',
+                colorbar=dict(title="min / flight", x=0.46, len=0.8, thickness=15),
+                zmin=0, zmax=df_ert_map['delay_per_flight'].quantile(0.95),
+                hovertemplate="<b>%{text}</b><br>%{z:.4f} min / flight<extra></extra>",
+                geo='geo'
+            ))
+
+            # geo2 (rechts): Airport
+            fig.add_trace(go.Choropleth(
+                locations=df_apt_map['iso_a3'],
+                z=df_apt_map['delay_per_arrival'],
+                text=df_apt_map['state_name'],
+                colorscale='Reds',
+                colorbar=dict(title="min / arrival", x=1.02, len=0.8, thickness=15),
+                zmin=0, zmax=df_apt_map['delay_per_arrival'].quantile(0.95),
+                hovertemplate="<b>%{text}</b><br>%{z:.4f} min / arrival<extra></extra>",
+                geo='geo2'
+            ))
+
+            fig.update_layout(
                 geo=dict(
-                    showland=True,       landcolor='#d0d0d0',
-                    showocean=True,      oceancolor='#dceefb',
-                    showcoastlines=True, coastlinecolor='white',
-                    showcountries=True,  countrycolor='white',
-                    projection_type='natural earth',
-                    center=dict(lat=52, lon=12),
-                    lataxis_range=[34, 72],
-                    lonaxis_range=[-25, 45],
+                    **geo_layout,
+                    domain=dict(x=[0.0, 0.44])
                 ),
-                margin=dict(l=0, r=0, t=40, b=0),
-                height=550,
+                geo2=dict(
+                    **geo_layout,
+                    domain=dict(x=[0.56, 1.0])
+                ),
+                height=500,
+                margin=dict(l=0, r=80, t=60, b=0),
             )
 
-            show(fig_choro)
+            show(fig)
 
 # Definition off all pages
 page_home     = st.Page(home,          title="Overview", icon="🏠", default=True)
