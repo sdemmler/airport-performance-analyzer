@@ -379,8 +379,8 @@ def home():
 
 # Definition off all pages
 page_home     = st.Page(home,          title="Overview", icon="🏠", default=True)
-page_subpage01 = st.Page("subpage01.py", title="Subpage01",  icon="✈️")
-page_subpage02   = st.Page("subpage02.py",   title="Subpage02",     icon="✈️")
+page_subpage01 = st.Page("subpage01.py", title="Routes & Airline Insights",  icon="✈️")
+page_subpage02   = st.Page("subpage02.py",   title="Airport Insights",     icon="✈️")
 
 subpage = st.navigation([page_home, page_subpage01, page_subpage02])
 

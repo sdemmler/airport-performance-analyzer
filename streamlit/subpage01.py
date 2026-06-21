@@ -14,6 +14,14 @@ def show(fig):
         st.pyplot(fig)
         plt.close(fig)
 
+def fix_encoding(x):
+    if not isinstance(x, str):
+        return x
+    try:
+        return x.encode("latin-1").decode("utf-8")
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        return x  # already correct, leave as-is
+
 # Run query from session state. run_query is defined in the main page
 run_query = st.session_state.get("run_query")
 
@@ -57,29 +65,76 @@ def load_year_data(year_selection):
     )
 
 
-# Cache airline ranking for the chosen airports to improve performance
-@st.cache_data(show_spinner=False)
-def load_top_airlines(airport_icao, direction, top_n):
-    col = "adep" if direction == "dep" else "ades"
-    return run_query(f"""
-        SELECT da.name AS airline, COUNT(*) AS n_flights
+# Cache airport list to improve performance
+@st.cache_data(show_spinner="Loading airport list ...")
+def load_airport_list():
+    df_apt = run_query("SELECT ident, name FROM dim_airport")
+    df_apt["name"] = df_apt["name"].apply(fix_encoding)
+    return df_apt
+
+
+# Cache airline list to improve performance
+@st.cache_data(show_spinner="Loading airline list ...")
+def load_airline_list():
+    df_airline = run_query("SELECT icao, name FROM dim_airline")
+    df_airline["name"] = df_airline["name"].apply(fix_encoding) # same encoding fix as on the main page; remove if names are already clean
+    return df_airline
+
+
+# Cache top routes to improve performance
+@st.cache_data(show_spinner="Loading routes ...")
+def load_top_routes(icao_operator, top_n=5):
+    return run_query("""
+        SELECT
+            ff.adep,
+            ff.ades,
+            COUNT(*) AS n_flights
         FROM fact_flight ff
-        INNER JOIN dim_airline da ON da.icao = ff.icao_operator
-        WHERE ff.{col} = '{airport_icao}'
-        GROUP BY da.name
+        WHERE ff.icao_operator = :icao_operator
+          AND ff.adep IS NOT NULL
+          AND ff.ades IS NOT NULL
+        GROUP BY ff.adep, ff.ades
         ORDER BY n_flights DESC
-        LIMIT {top_n}
-        """
+        LIMIT :top_n
+        """,
+        params={"icao_operator": icao_operator, "top_n": top_n},
     )
 
+# Cache airlines to improve performance
+@st.cache_data(show_spinner="Loading fleet ...")
+def load_fleet(icao_operator):
+    return run_query("""
+        SELECT
+            ff.model,
+            COUNT(*) AS n_flights
+        FROM fact_flight ff
+        WHERE ff.icao_operator = :icao_operator
+          AND ff.model IS NOT NULL
+        GROUP BY ff.model
+        ORDER BY n_flights DESC
+        """,
+        params={"icao_operator": icao_operator},
+    )
+
+# Airport names for display (ICAO stays the internal value)
+df_apt = load_airport_list()
+apt_name_map = dict(zip(df_apt["ident"], df_apt["name"]))
+
+def apt_label(code):
+    return apt_name_map.get(code, code)
 
 
-st.title("Dashboard")
+
+
+################### Website start ###################
+
+st.title("Routes & Airline Dashboard")
+
+st.header("Route Insights")
 
 years = list(range(2022, 2027))
 
 year_selection = st.selectbox("", years, index=None, placeholder="Select a year")
-
 
 if year_selection:
     
@@ -95,17 +150,7 @@ if year_selection:
     df_clean = both_not_null[
         (both_not_null["flight_duration_minutes"] >= 10) &
         (both_not_null["origin"] != both_not_null["destination"])
-    ].copy()
-
-    # Airport names for display (ICAO stays the internal value)
-    df_apt = run_query("SELECT ident, name FROM dim_airport")
-    df_apt["name"] = df_apt["name"].apply(
-        lambda x: x.encode("latin-1").decode("utf-8") if isinstance(x, str) else x
-    )  # same encoding fix as on the main page; remove if names are already clean
-    name_map = dict(zip(df_apt["ident"], df_apt["name"]))
-
-    def apt_label(code):
-        return name_map.get(code, code)        
+    ].copy() 
 
     # Derive month & day columns
     dts = pd.to_datetime(df_clean["dof"])
@@ -187,35 +232,70 @@ if year_selection:
             plt.tight_layout()
             show(fig)
 
-            
-
-### TOP X airlines for the chosen airports
-
-    top_n_list = list(range(1,6))
-
-    top_n = st.selectbox("Ranking amount", top_n_list, index=4, placeholder="How many airlines?")
-    
-        # --- departing airlines (airport = origin) ---
-    df_dep = load_top_airlines(o, "dep", top_n)
 
 
-    # --- arriving airlines (airport = destination) ---
-    df_arr = load_top_airlines(d, "arr", top_n)
-    
-    fig1, ax1 = plt.subplots(figsize=(7, 5))
-    ax1.barh(df_dep["airline"], df_dep["n_flights"], color="steelblue")
-    ax1.invert_yaxis()
-    ax1.set_title(f"Top {top_n} departing airlines — {apt_label(o)}")
-    ax1.set_xlabel("Number of flights")
+st.header("Deep dive Airlines")
 
-    fig2, ax2 = plt.subplots(figsize=(7, 5))
-    ax2.barh(df_arr["airline"], df_arr["n_flights"], color="indianred")
-    ax2.invert_yaxis()
-    ax2.set_title(f"Top {top_n} arriving airlines — {apt_label(d)}")
-    ax2.set_xlabel("Number of flights")
+# -----------------------------------------------------------------
+# Airline Selection
+# -----------------------------------------------------------------
 
-    cy, cz = st.columns(2)
-    with cy:
-        show(fig1)
-    with cz:
-        show(fig2)
+df_airline = load_airline_list()
+airline_name_map = dict(zip(df_airline["icao"], df_airline["name"]))
+
+def airline_label(code):
+    return airline_name_map.get(code, code)
+
+airlines = sorted(df_airline["icao"].dropna().unique(), key=airline_label)
+
+airline_icao = st.selectbox(
+    "Airline",
+    airlines,
+    format_func=airline_label,
+)
+
+airline_name = airline_label(airline_icao)
+
+# -----------------------------------------------------------------
+# Top 5 routes for the chosen airline
+# -----------------------------------------------------------------
+
+# Load airlines
+df_routes = load_top_routes(airline_icao, top_n=5)
+
+# Rename table columns
+df_routes_display = df_routes.rename(columns={
+    "adep": "Departure",
+    "ades": "Destination",
+    "n_flights": "Flights",
+})
+
+# display airport names instead of icao
+df_routes_display["Departure"]   = df_routes_display["Departure"].apply(apt_label)
+df_routes_display["Destination"] = df_routes_display["Destination"].apply(apt_label)
+
+# load fleets
+df_fleet = load_fleet(airline_icao)
+
+# Rename table columns
+df_fleet_display = df_fleet.rename(columns={
+    "model": "Airplane model",
+    "n_flights": "Flights",
+})
+
+# Display
+c1, c2 = st.columns(2)
+
+with c1:
+    st.subheader(f"🛫 Top 5 Routes - {airline_name}")
+    if df_routes.empty:
+        st.warning(f"No route data available for {airline_name} ({airline_icao}).")
+        st.stop()
+    st.dataframe(df_routes_display, hide_index=True)
+
+with c2:
+    st.subheader(f"✈️ Airplane types - {airline_name}")
+    if df_fleet.empty:
+        st.warning(f"No data available for the airplane model types for {airline_name} ({airline_icao}).")
+        st.stop()
+    st.dataframe(df_fleet_display, hide_index=True)
