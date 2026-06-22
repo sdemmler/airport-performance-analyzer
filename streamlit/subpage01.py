@@ -188,6 +188,8 @@ if year_selection:
     # Table: all airlines on the route + total row
     sub_all = df_view[(df_view["origin"] == o) & (df_view["destination"] == d)]
 
+    st.divider()
+
     st.subheader(f"Airlines on the route {apt_label(o)} → {apt_label(d)}")
 
     if sub_all.empty:
@@ -210,6 +212,8 @@ if year_selection:
 
         st.write(f"The table above shows every airline that operated between the chosen airports ({apt_label(o)} → {apt_label(d)}) during the selected period ({day_str}{month_str}{year_selection}). The boxplot below, however, only includes airlines with at least 30 flights on this route, to ensure the results are statistically meaningful.")
 
+        st.divider()
+        
         # Boxplot (airlines with >= 30 flights)
         sub = df_view[(df_view["origin"] == o) & (df_view["destination"] == d)]
         counts = sub["airline"].value_counts()
@@ -217,28 +221,45 @@ if year_selection:
         order = sub.groupby("airline")["flight_duration_minutes"].median().sort_values().index
         data  = [sub.loc[sub["airline"] == a, "flight_duration_minutes"] for a in order]
 
-        # Show airline and number of flight counts used in the boxplot
-        labels = [f"{a} (n={counts[a]})" for a in order]
+        # Only airline names on the x-axis (n is overlaid in the plot)
+        labels = list(order)
 
         if len(data) == 0:
             st.info("No airline with ≥ 30 flights on this route - no boxplot.")
         else:
             fig, ax = plt.subplots(figsize=(10, 5))
-            ax.boxplot(data, tick_labels=labels, showfliers=False)
-            ax.set_title(f"Flight duration {apt_label(o)} → {apt_label(d)} by airline")
-            ax.set_ylabel("Minutes (airborne)")
-            # ax.set_xlabel("Airline")
+            ax.boxplot(
+                data,
+                tick_labels=labels,
+                showfliers=False,
+                patch_artist=True,
+                boxprops=dict(facecolor="steelblue", alpha=0.9),
+                medianprops=dict(color="crimson", linewidth=2),
+            )
+
+            # Overlay sample size per airline
+            y_min, y_max = ax.get_ylim()
+            y_pos = y_max - (y_max - y_min) * 0.02
+            for i, a in enumerate(order, start=1):
+                ax.text(i, y_pos, f"n={counts[a]:,}", ha="center", fontsize=8, color="gray")
+
+            ax.set_title(f"Flight duration {apt_label(o)} → {apt_label(d)} by airline\n", fontsize=12)
+            ax.set_ylabel("Minutes (airborne)", fontsize=8)
+            ax.tick_params(axis="both", labelsize=8)
             plt.xticks(rotation=45, ha="right")
             plt.tight_layout()
             show(fig)
 
 
+st.divider()
+
+########### Deep Dive Airlines ###########
 
 st.header("Deep dive Airlines")
 
-# -----------------------------------------------------------------
+st.write("Below are the **top 5 routes** of the selected airline along with the **aircraft models** in use, covering the period **2016–2026**.")
+
 # Airline Selection
-# -----------------------------------------------------------------
 
 df_airline = load_airline_list()
 airline_name_map = dict(zip(df_airline["icao"], df_airline["name"]))
@@ -249,16 +270,16 @@ def airline_label(code):
 airlines = sorted(df_airline["icao"].dropna().unique(), key=airline_label)
 
 airline_icao = st.selectbox(
-    "Airline",
+    "Select an Airline",
     airlines,
+    index=4530,
     format_func=airline_label,
 )
 
 airline_name = airline_label(airline_icao)
 
-# -----------------------------------------------------------------
+
 # Top 5 routes for the chosen airline
-# -----------------------------------------------------------------
 
 # Load airlines
 df_routes = load_top_routes(airline_icao, top_n=5)

@@ -260,122 +260,118 @@ def home():
         show(fig2)
 
         st.divider()
+                    
+        st.subheader(f"Airport vs. En-Route ATFM Delay by Country for {year_selection}")
+
+        # ── Airport delay per arrival by country ─────────────
+        df_apt_map = run_query("""
+        SELECT
+            d.state_name,
+            a.iso_country AS iso_a2,
+            SUM(d.flt_arr_1) AS total_arrivals,
+            SUM(d.dly_apt_arr_1) AS total_delay_min,
+            ROUND(SUM(d.dly_apt_arr_1) / NULLIF(SUM(d.flt_arr_1), 0), 4) AS delay_per_arrival
+        FROM fact_airport_delay d
+        JOIN dim_airport a ON d.apt_icao = a.ident
+        WHERE d.year = 2025
+        AND d.dly_apt_arr_1 IS NOT NULL
+        GROUP BY d.state_name, a.iso_country
+        ORDER BY delay_per_arrival DESC
+        """
+        )
+
+        # ── En-route delay per flight by country ───────────────
+        df_ert_map = run_query("""
+        SELECT
+            r.iso_country AS iso_a2,
+            r.country_name,
+            SUM(e.dly_ert_1) AS total_delay_min,
+            SUM(e.flt_ert_1) AS total_flights,
+            ROUND(SUM(e.dly_ert_1) / NULLIF(SUM(e.flt_ert_1), 0), 4) AS delay_per_flight
+        FROM fact_enroute_delay e
+        JOIN dim_entity_region r ON e.entity_name = r.entity_name
+        WHERE e.year = 2025
+        AND e.entity_type = 'ANSP (AUA)'
+        AND e.dly_ert_1 IS NOT NULL
+        GROUP BY r.iso_country, r.country_name
+        ORDER BY delay_per_flight DESC
+        """
+        )
         
-        choro_toggle = st.toggle(f"Interested in Airport vs. En-Route ATFM Delay on a country-level?")
-        
-        if choro_toggle:
-            
-            st.subheader(f"Airport vs. En-Route ATFM Delay by Country for {year_selection}")
+        # ── ISO-2 → ISO-3 Mapping ────────────────────────────────────
+        ISO2_TO_ISO3 = {
+            'AL':'ALB','AM':'ARM','AT':'AUT','AZ':'AZE','BA':'BIH','BE':'BEL',
+            'BG':'BGR','BY':'BLR','CH':'CHE','CY':'CYP','CZ':'CZE','DE':'DEU',
+            'DK':'DNK','EE':'EST','ES':'ESP','FI':'FIN','FR':'FRA','GB':'GBR',
+            'GE':'GEO','GR':'GRC','HR':'HRV','HU':'HUN','IE':'IRL','IL':'ISR',
+            'IS':'ISL','IT':'ITA','LT':'LTU','LU':'LUX','LV':'LVA','MD':'MDA',
+            'ME':'MNE','MK':'MKD','MT':'MLT','NL':'NLD','NO':'NOR','PL':'POL',
+            'PT':'PRT','RO':'ROU','RS':'SRB','SE':'SWE','SI':'SVN','SK':'SVK',
+            'TR':'TUR','UA':'UKR',
+        }
+        df_apt_map['iso_a3'] = df_apt_map['iso_a2'].map(ISO2_TO_ISO3)
+        df_ert_map['iso_a3'] = df_ert_map['iso_a2'].map(ISO2_TO_ISO3)
 
-            # ── Airport delay per arrival by country ─────────────
-            df_apt_map = run_query("""
-            SELECT
-                d.state_name,
-                a.iso_country AS iso_a2,
-                SUM(d.flt_arr_1) AS total_arrivals,
-                SUM(d.dly_apt_arr_1) AS total_delay_min,
-                ROUND(SUM(d.dly_apt_arr_1) / NULLIF(SUM(d.flt_arr_1), 0), 4) AS delay_per_arrival
-            FROM fact_airport_delay d
-            JOIN dim_airport a ON d.apt_icao = a.ident
-            WHERE d.year = 2025
-            AND d.dly_apt_arr_1 IS NOT NULL
-            GROUP BY d.state_name, a.iso_country
-            ORDER BY delay_per_arrival DESC
-            """
-            )
+        # ── Plot ─────────────────────────────────────────────────────────────
 
-            # ── En-route delay per flight by country ───────────────
-            df_ert_map = run_query("""
-            SELECT
-                r.iso_country AS iso_a2,
-                r.country_name,
-                SUM(e.dly_ert_1) AS total_delay_min,
-                SUM(e.flt_ert_1) AS total_flights,
-                ROUND(SUM(e.dly_ert_1) / NULLIF(SUM(e.flt_ert_1), 0), 4) AS delay_per_flight
-            FROM fact_enroute_delay e
-            JOIN dim_entity_region r ON e.entity_name = r.entity_name
-            WHERE e.year = 2025
-            AND e.entity_type = 'ANSP (AUA)'
-            AND e.dly_ert_1 IS NOT NULL
-            GROUP BY r.iso_country, r.country_name
-            ORDER BY delay_per_flight DESC
-            """
-            )
-            
-            # ── ISO-2 → ISO-3 Mapping ────────────────────────────────────
-            ISO2_TO_ISO3 = {
-                'AL':'ALB','AM':'ARM','AT':'AUT','AZ':'AZE','BA':'BIH','BE':'BEL',
-                'BG':'BGR','BY':'BLR','CH':'CHE','CY':'CYP','CZ':'CZE','DE':'DEU',
-                'DK':'DNK','EE':'EST','ES':'ESP','FI':'FIN','FR':'FRA','GB':'GBR',
-                'GE':'GEO','GR':'GRC','HR':'HRV','HU':'HUN','IE':'IRL','IL':'ISR',
-                'IS':'ISL','IT':'ITA','LT':'LTU','LU':'LUX','LV':'LVA','MD':'MDA',
-                'ME':'MNE','MK':'MKD','MT':'MLT','NL':'NLD','NO':'NOR','PL':'POL',
-                'PT':'PRT','RO':'ROU','RS':'SRB','SE':'SWE','SI':'SVN','SK':'SVK',
-                'TR':'TUR','UA':'UKR',
-            }
-            df_apt_map['iso_a3'] = df_apt_map['iso_a2'].map(ISO2_TO_ISO3)
-            df_ert_map['iso_a3'] = df_ert_map['iso_a2'].map(ISO2_TO_ISO3)
+        fig = make_subplots(
+            rows=1, cols=2,
+            specs=[[{"type": "choropleth"}, {"type": "choropleth"}]],
+            subplot_titles=[
+                "En-Route ATFM Delay per Flight (min)",
+                "Airport ATFM Delay per Arrival (min)"
+            ]
+        )
 
-            # ── Plot ─────────────────────────────────────────────────────────────
+        geo_layout = dict(
+            showland=True,       landcolor='#d0d0d0',
+            showocean=True,      oceancolor='#dceefb',
+            showcoastlines=True, coastlinecolor='white',
+            showcountries=True,  countrycolor='white',
+            projection_type='natural earth',
+            center=dict(lat=52, lon=12),
+            lataxis_range=[34, 72],
+            lonaxis_range=[-25, 45],
+        )
 
-            fig = make_subplots(
-                rows=1, cols=2,
-                specs=[[{"type": "choropleth"}, {"type": "choropleth"}]],
-                subplot_titles=[
-                    "En-Route ATFM Delay per Flight (min)",
-                    "Airport ATFM Delay per Arrival (min)"
-                ]
-            )
+        # geo (links): En-Route
+        fig.add_trace(go.Choropleth(
+            locations=df_ert_map['iso_a3'],
+            z=df_ert_map['delay_per_flight'],
+            text=df_ert_map['country_name'],
+            colorscale='Blues',
+            colorbar=dict(title="min / flight", x=0.46, len=0.8, thickness=15),
+            zmin=0, zmax=df_ert_map['delay_per_flight'].quantile(0.95),
+            hovertemplate="<b>%{text}</b><br>%{z:.4f} min / flight<extra></extra>",
+            geo='geo'
+        ))
 
-            geo_layout = dict(
-                showland=True,       landcolor='#d0d0d0',
-                showocean=True,      oceancolor='#dceefb',
-                showcoastlines=True, coastlinecolor='white',
-                showcountries=True,  countrycolor='white',
-                projection_type='natural earth',
-                center=dict(lat=52, lon=12),
-                lataxis_range=[34, 72],
-                lonaxis_range=[-25, 45],
-            )
+        # geo2 (rechts): Airport
+        fig.add_trace(go.Choropleth(
+            locations=df_apt_map['iso_a3'],
+            z=df_apt_map['delay_per_arrival'],
+            text=df_apt_map['state_name'],
+            colorscale='Reds',
+            colorbar=dict(title="min / arrival", x=1.02, len=0.8, thickness=15),
+            zmin=0, zmax=df_apt_map['delay_per_arrival'].quantile(0.95),
+            hovertemplate="<b>%{text}</b><br>%{z:.4f} min / arrival<extra></extra>",
+            geo='geo2'
+        ))
 
-            # geo (links): En-Route
-            fig.add_trace(go.Choropleth(
-                locations=df_ert_map['iso_a3'],
-                z=df_ert_map['delay_per_flight'],
-                text=df_ert_map['country_name'],
-                colorscale='Blues',
-                colorbar=dict(title="min / flight", x=0.46, len=0.8, thickness=15),
-                zmin=0, zmax=df_ert_map['delay_per_flight'].quantile(0.95),
-                hovertemplate="<b>%{text}</b><br>%{z:.4f} min / flight<extra></extra>",
-                geo='geo'
-            ))
+        fig.update_layout(
+            geo=dict(
+                **geo_layout,
+                domain=dict(x=[0.0, 0.44])
+            ),
+            geo2=dict(
+                **geo_layout,
+                domain=dict(x=[0.56, 1.0])
+            ),
+            height=500,
+            margin=dict(l=0, r=80, t=60, b=0),
+        )
 
-            # geo2 (rechts): Airport
-            fig.add_trace(go.Choropleth(
-                locations=df_apt_map['iso_a3'],
-                z=df_apt_map['delay_per_arrival'],
-                text=df_apt_map['state_name'],
-                colorscale='Reds',
-                colorbar=dict(title="min / arrival", x=1.02, len=0.8, thickness=15),
-                zmin=0, zmax=df_apt_map['delay_per_arrival'].quantile(0.95),
-                hovertemplate="<b>%{text}</b><br>%{z:.4f} min / arrival<extra></extra>",
-                geo='geo2'
-            ))
-
-            fig.update_layout(
-                geo=dict(
-                    **geo_layout,
-                    domain=dict(x=[0.0, 0.44])
-                ),
-                geo2=dict(
-                    **geo_layout,
-                    domain=dict(x=[0.56, 1.0])
-                ),
-                height=500,
-                margin=dict(l=0, r=80, t=60, b=0),
-            )
-
-            show(fig)
+        show(fig)
 
 # Definition off all pages
 page_home     = st.Page(home,          title="Overview", icon="🏠", default=True)
@@ -389,7 +385,15 @@ subpage = st.navigation([page_home, page_subpage01, page_subpage02])
 with st.sidebar:
     # st.image("") left blank to put an image later on
     st.markdown("---")
-
+    st.subheader("References")
+    st.link_button("OPDI", "https://ansperformance.eu/data/", on_click="ignore", type="tertiary")
+    st.link_button("Eurocontrol", "https://www.eurocontrol.int/our-data" , on_click="ignore", type="tertiary")
+    st.link_button("OurAirports", "https://ourairports.com/", on_click="ignore", type="tertiary")
+    st.link_button("Openflights", "https://openflights.org/", on_click="ignore", type="tertiary")
+    st.link_button("Nager", "https://date.nager.at/scalar/#api-version-3", on_click="ignore", type="tertiary")
+    st.link_button("Holidays", "https://openholidaysapi.org/de/", on_click="ignore", type="tertiary")
+    st.link_button("Openmeteo", "https://open-meteo.com/", on_click="ignore", type="tertiary")
+    st.markdown("---")
 
 # Area, which is shown on ALL pages
 
