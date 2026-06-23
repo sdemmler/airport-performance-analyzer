@@ -258,7 +258,7 @@ st.divider()
 
 ############ Heatmap ############ 
 
-st.subheader("Total delays zoomed in to a day-to-day comparison")
+st.subheader("Total delays zoomed into a day-to-day comparison")
 
 # calculate figure height and title offset (dynamic)
 n_years = ts.index.year.nunique()

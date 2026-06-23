@@ -240,7 +240,7 @@ if year_selection:
 
             # Overlay sample size per airline
             y_min, y_max = ax.get_ylim()
-            y_pos = y_max - (y_max - y_min) * 0.02
+            y_pos = y_max - (y_max - y_min) * (-0.020)
             for i, a in enumerate(order, start=1):
                 ax.text(i, y_pos, f"n={counts[a]:,}", ha="center", fontsize=8, color="gray")
 

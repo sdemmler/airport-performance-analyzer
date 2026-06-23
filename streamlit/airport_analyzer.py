@@ -439,7 +439,7 @@ with st.sidebar:
 
 # Area, which is shown on ALL pages
 
-st.image("../docs/images/project_banner.svg", use_container_width=True)
+st.image("./docs/images/project_banner.svg", use_container_width=True)
 
 st.divider()
 

@@ -246,6 +246,7 @@ airport-performance-analyzer/
 │   ├── download/
 │   │   ├── download_opdi.py          # Downloads all OPDI-Files (Source: OPDI)
 │   │   └── download_weather.py       # Downloads all Weather Data
+│   │   └── download_holidays.py       # Downloads all Holiday Data
 │   │
 │   └── import/
 │       ├── import_dimensions.py      # dim_airport, dim_runway, dim_airline, dim_entity_region
@@ -314,13 +315,11 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
-DATABASE_URL = postgresql://postgres:yourpassword@localhost:5432/airport_analyzer
-DB_SCHEMA = public
-DB_NAME = airport_analyzer
-DB_USER = postgres
-DB_PASSWORD = yourpassword
-DB_PORT = 5432
-DB_HOST = localhost
+DB_NAME = <YourDBName>
+DB_USER = <YourUserName>
+DB_PASSWORD = <YourDBPassword>
+DB_PORT=<port>
+DB_HOST=localhost/<IP>
 ```
 
 ### Step 4 — Initialize the database schema
@@ -344,6 +343,7 @@ Download the source files manually or via provided scripts:
 - **OurAirports airports.csv:** [ourairports.com/data/](https://ourairports.com/data/) → `data/raw/opdi/`
 - **OurAirports runways.csv:** [ourairports.com/data/](https://ourairports.com/data/) → `data/raw/opdi/`
 - **Weather data:** Download via provided import script → `scripts/download/download_weather.py`
+- **Holiday data:** Download via provided import script → `scripts/download/download_holidays.py`
 
 ### Step 6 — Run the import pipeline
 
@@ -371,8 +371,6 @@ All runtime configuration is handled through the `.env` file:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DATABASE_URL` | Full PostgreSQL connection string | `postgresql://user:pw@host:5432/db` |
-| `DB_SCHEMA` | Target schema within the database | `public` |
 | `DB_NAME` | Full PostgreSQL connection string | `airport_performance` |
 | `DB_USER` | Target schema within the database | `postgres` |
 | `DB_PASSWORD` | Full PostgreSQL connection string | `yourpassword` |
@@ -456,10 +454,11 @@ ORDER BY obs_date;
 
 ## Dashboard
 
-Launch the Streamlit dashboard locally:
+From the project's root directory, activate the .venv and run:
 
 ```bash
-streamlit run dashboard/airport_analyzer.py
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
+streamlit run ./streamlit/airport_analyzer.py
 ```
 
 The app opens at `http://localhost:8501` by default. It reads directly from the
