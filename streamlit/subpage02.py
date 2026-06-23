@@ -239,6 +239,11 @@ with cz:
         st.warning("Ranking of departing and arriving airlines is identical!")
     else:
         show(fig2)
+st.caption(
+    "Top airlines by number of flights at the selected airport, split by direction. "
+    "Departing airlines are ranked by outbound flights, arriving airlines by inbound flights. "
+    "Data covers the full available period."
+)
 
 
 st.divider()
@@ -279,6 +284,12 @@ fig, axes = calplot.calplot(
 )
 
 show(fig)
+st.caption(
+    "Daily average ATFM delay per arrival in minutes. "
+    "Grey cells indicate days with no delay record in the dataset. "
+    "The colour scale is capped at the 85th percentile of days with actual delay "
+    "to avoid distortion from rare extreme events."
+)
 
 
 st.divider()
@@ -367,3 +378,9 @@ plt.suptitle(f"Airport vs. En-Route ATFM Delay Causes — {airport_name} ({count
              fontsize=14, fontweight='bold', y=1.01)
 plt.tight_layout()
 show(fig)
+st.caption(
+    "Left chart: annual ATFM delay at the selected airport broken down by official cause code (2016–2025). "
+    "Right chart: en-route ATFM delay in the national airspace of the same country, shown at country level. "
+    "Note the difference in scale: en-route figures reflect all flights through the national airspace, "
+    "not just those at the selected airport."
+)

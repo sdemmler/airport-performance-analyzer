@@ -57,10 +57,23 @@ st.session_state["get_engine"] = get_engine
 
 # Main Page (set as funktion -> presented as its own page)
 def home():
-    st.title("✈️ Airport Performance Analyzer - Dashboard")
+    st.title("Airport Performance Analyzer - Dashboard")
     st.markdown(
         """
-        Welcome!
+        European aviation generates millions of delay minutes every year
+        but the underlying data is scattered across sources and rarely analyzed together.
+
+        This dashboard integrates **62.5 million individual flights**, **1 million ATFM delay records**
+        and **38 million hourly weather observations** across 42 European countries into a single
+        analytical platform built as a capstone project of a Data Science programme.
+
+        **What you can explore:**
+        - Which airports and countries are most and least reliable
+        - What causes delays: weather, ATC capacity, airlines or strikes
+        - When delays peak across seasons, weekdays and months
+        - How strongly weather correlates with delay patterns
+
+        > *Main Data sources: OPDI · Eurocontrol · Open-Meteo*
         """
     )
     st.divider()
@@ -105,6 +118,10 @@ def home():
 
         plt.tight_layout()
         show(fig)
+        st.caption(
+            "Ranked by total IFR flight movements (departures + arrivals) between 2019 and 2024. "
+            "Movements are expressed in millions. Only airports with recorded traffic data are included."
+        )
     
     st.divider()
 
@@ -184,6 +201,10 @@ def home():
             height=550,
         )
         show(fig)
+        st.caption(
+            "Each bubble represents an airport. Bubble size and colour indicate total IFR flight movements "
+            "for the selected year. Only large and medium airports with more than 500 annual movements are shown."
+        )
 
         st.divider()
 
@@ -258,6 +279,11 @@ def home():
             height=550,
         )
         show(fig2)
+        st.caption(
+            "ATFM (Air Traffic Flow Management) arrival delay measures the average waiting time per arriving flight "
+            "caused by capacity constraints at the destination airport. Values represent minutes of delay per arrival. "
+            "Airports with fewer than 365 annual arrivals are excluded."
+        )
 
         st.divider()
                     
@@ -372,27 +398,37 @@ def home():
         )
 
         show(fig)
+        st.caption(
+            "Left map: average en-route ATFM delay per flight caused by airspace congestion along the route. "
+            "Right map: average airport ATFM delay per arrival caused by capacity constraints at the destination. "
+            "Both metrics are expressed in minutes and reflect the selected year."
+        )
 
 # Definition off all pages
 page_home     = st.Page(home,          title="Overview", icon="🏠", default=True)
-page_subpage01 = st.Page("subpage01.py", title="Routes & Airline Insights",  icon="✈️")
-page_subpage02   = st.Page("subpage02.py",   title="Airport Insights",     icon="✈️")
+page_subpage01 = st.Page("subpage01.py", title="Routes & Airline Insights",  icon="🛣️")
+page_subpage02   = st.Page("subpage02.py",   title="Airport Insights",     icon="🛬")
 
 subpage = st.navigation([page_home, page_subpage01, page_subpage02])
 
 
 # Sidebar
 with st.sidebar:
-    # st.image("") left blank to put an image later on
-    st.markdown("---")
-    st.subheader("References")
-    st.link_button("OPDI", "https://ansperformance.eu/data/", type="tertiary")
-    st.link_button("Eurocontrol", "https://www.eurocontrol.int/our-data" , type="tertiary")
-    st.link_button("OurAirports", "https://ourairports.com/", type="tertiary")
-    st.link_button("Openflights", "https://openflights.org/", type="tertiary")
-    st.link_button("Nager", "https://date.nager.at/scalar/#api-version-3", type="tertiary")
-    st.link_button("Holidays", "https://openholidaysapi.org/de/", type="tertiary")
-    st.link_button("Openmeteo", "https://open-meteo.com/", type="tertiary")
+    
+    st.markdown(
+        '<p style="font-size:1.0rem; color:#666; margin:0;">DSI Education · Capstone 2026</p>'
+        '<p style="font-size:1.0rem; color:#666; margin:0;">Sebastian Demmler · André Janßen</p>',
+        unsafe_allow_html=True
+    )
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    st.markdown("Data sources:")
+    st.link_button("OPDI", "https://ansperformance.eu/data/", type="secondary")
+    st.link_button("Eurocontrol", "https://www.eurocontrol.int/our-data" , type="secondary")
+    st.link_button("Openmeteo", "https://open-meteo.com/", type="secondary")
+    st.link_button("OurAirports", "https://ourairports.com/data/", type="secondary")
+    st.link_button("Nager", "https://date.nager.at/scalar/#api-version-3", type="secondary")
+    st.link_button("Holidays", "https://openholidaysapi.org/de/", type="secondary")
     st.markdown("---")
 
 # Area, which is shown on ALL pages
