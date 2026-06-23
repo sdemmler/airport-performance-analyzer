@@ -70,16 +70,24 @@ def load_airport_data(apt_icao):
 # Cache airline ranking for the chosen airports to improve performance
 @st.cache_data(show_spinner="Loading data ...")
 def load_top_airlines(airport_icao, direction, top_n):
-    col = "adep" if direction == "dep" else "ades"
-    return run_query(f"""
+    return run_query("""
         SELECT da.name AS airline, COUNT(*) AS n_flights
         FROM fact_flight ff
         INNER JOIN dim_airline da ON da.icao = ff.icao_operator
-        WHERE ff.{col} = '{airport_icao}'
+        WHERE (
+            (:direction = 'dep' AND ff.adep = :airport_icao)
+            OR
+            (:direction = 'arr' AND ff.ades = :airport_icao)
+        )
         GROUP BY da.name
         ORDER BY n_flights DESC
-        LIMIT {top_n}
-        """
+        LIMIT :top_n
+        """,
+        params={
+            "airport_icao": airport_icao,
+            "direction": direction,
+            "top_n": top_n,
+        },
     )
 
 

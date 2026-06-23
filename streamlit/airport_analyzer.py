@@ -5,11 +5,13 @@ import seaborn as sns
 import streamlit as st
 from sqlalchemy import create_engine, text
 from pathlib import Path
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import plotly.express as px
 from theme import apply_theme
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from sqlalchemy.engine import URL
+
 
 # Page definition -- only for main page
 st.set_page_config(
@@ -19,22 +21,24 @@ st.set_page_config(
 )
 
 # set global theme
-apply_theme()
+#apply_theme()
 
 # Load .env from /streamlit/
-load_dotenv(Path(__file__).parent / ".env")
+load_dotenv(find_dotenv())
 
 
 # Connection to DB
 @st.cache_resource
 def get_engine():
-    url = (
-        f"postgresql+psycopg2://"
-        f"{os.environ['DB_USER']}:{os.environ['DB_PASSWORD']}"
-        f"@{os.environ['DB_HOST']}:{os.environ['DB_PORT']}"
-        f"/{os.environ['DB_NAME']}"
+    url = URL.create(
+        "postgresql+psycopg2",
+        username=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"],
+        host=os.environ["DB_HOST"],
+        port=os.environ["DB_PORT"],
+        database=os.environ["DB_NAME"],
     )
-    return create_engine(url)
+    return create_engine(url, pool_pre_ping=True, pool_recycle=1800)
 
 def run_query(query, params=None):
     with get_engine().connect() as conn:
@@ -120,7 +124,7 @@ def home():
         st.subheader(f"🇪🇺 Map of IFR flight movements within Europe ({year_selection}).")
 
         with st.spinner("Loading data ..."):
-            df_map = run_query(f"""
+            df_map = run_query("""
                 SELECT
                     t.apt_icao,
                     a.name            AS airport_name,
@@ -131,16 +135,17 @@ def home():
                     SUM(t.flt_tot_1)  AS total_movements
                 FROM fact_airport_traffic t
                 JOIN dim_airport a ON t.apt_icao = a.ident
-                WHERE EXTRACT(year FROM t.flt_date) = {year_selection}
+                WHERE EXTRACT(year FROM t.flt_date) = :year_selection
                 AND t.flt_tot_1 > 0
-                AND a.latitude_deg  BETWEEN 35 AND 72     -- Europe-Bounding-Box
+                AND a.latitude_deg  BETWEEN 35 AND 72
                 AND a.longitude_deg BETWEEN -25 AND 45
                 AND a.type IN ('large_airport', 'medium_airport')
                 GROUP BY t.apt_icao, a.name, a.municipality, a.iso_country, a.latitude_deg, a.longitude_deg
                 HAVING SUM(t.flt_tot_1) > 500
                 ORDER BY total_movements DESC
-                """
-                )
+                """,
+                params={"year_selection": year_selection}
+            )
         
         df_map['airport_name'] = df_map['airport_name'].apply(
         lambda x: x.encode('latin-1').decode('utf-8') if isinstance(x, str) else x
@@ -191,7 +196,7 @@ def home():
         st.subheader(f"🇪🇺 ATFM delay per arrival by airport ({year_selection}).")
 
         with st.spinner("Loading data ..."):
-            df_map_delay = run_query(f"""
+            df_map_delay = run_query("""
                 SELECT
                     d.apt_icao,
                     a.name            AS airport_name,
@@ -199,12 +204,12 @@ def home():
                     a.iso_country     AS country,
                     a.latitude_deg    AS lat,
                     a.longitude_deg   AS lon,
-                    SUM(d.flt_arr_1)                                          AS total_arrivals,
-                    SUM(d.dly_apt_arr_1)                                      AS total_delay_min,
+                    SUM(d.flt_arr_1)                                              AS total_arrivals,
+                    SUM(d.dly_apt_arr_1)                                          AS total_delay_min,
                     ROUND(SUM(d.dly_apt_arr_1) / NULLIF(SUM(d.flt_arr_1), 0), 3) AS delay_per_arrival
                 FROM fact_airport_delay d
                 JOIN dim_airport a ON d.apt_icao = a.ident
-                WHERE EXTRACT(year FROM d.flt_date) = {year_selection}
+                WHERE EXTRACT(year FROM d.flt_date) = :year_selection
                 AND d.dly_apt_arr_1 > 0
                 AND a.latitude_deg  BETWEEN 35 AND 72
                 AND a.longitude_deg BETWEEN -25 AND 45
@@ -213,7 +218,8 @@ def home():
                         a.latitude_deg, a.longitude_deg
                 HAVING SUM(d.flt_arr_1) > 365
                 ORDER BY delay_per_arrival DESC
-                """
+                """,
+                params={"year_selection": year_selection}
             )
 
         df_map_delay['airport_name'] = df_map_delay['airport_name'].apply(

@@ -1,22 +1,23 @@
 import pandas as pd
 import os
+from dotenv import load_dotenv, find_dotenv
 from sqlalchemy import create_engine, text
-from dotenv import load_dotenv
+from sqlalchemy.engine import URL
 
-# Set the working directory to the folder containing import_eurocontrol.py
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(find_dotenv())
 
-# Load .env file
-load_dotenv()
-DB_URL = os.getenv('DATABASE_URL')
-engine = create_engine(DB_URL)
+def get_engine():
+    url = URL.create(
+        "postgresql+psycopg2",
+        username=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"],
+        host=os.environ["DB_HOST"],
+        port=os.environ["DB_PORT"],
+        database=os.environ["DB_NAME"],
+    )
+    return create_engine(url, pool_pre_ping=True, pool_recycle=1800)
 
-# Empty fact tables
-with engine.connect() as conn:
-    conn.execute(text("TRUNCATE TABLE fact_airport_delay RESTART IDENTITY CASCADE;"))
-    conn.execute(text("TRUNCATE TABLE fact_airport_traffic RESTART IDENTITY CASCADE;"))
-    conn.execute(text("TRUNCATE TABLE fact_enroute_delay RESTART IDENTITY CASCADE;"))
-    conn.commit()
+engine = get_engine()
 
 # Years to import
 YEARS_LIST = list(range(2016, 2027))

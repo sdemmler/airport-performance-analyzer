@@ -29,7 +29,7 @@ run_query = st.session_state.get("run_query")
 # Cache data of chosen year to improve performance
 @st.cache_data(show_spinner="Loading data ...")
 def load_year_data(year_selection):
-    return run_query(f"""
+    return run_query("""
         WITH flight_times AS (
             SELECT
                 flight_id,
@@ -37,8 +37,8 @@ def load_year_data(year_selection):
                 MAX(event_date + event_time) FILTER (WHERE type = 'entry-runway') AS end_ts
             FROM fact_flight_event
             WHERE type IN ('entry-runway', 'exit-runway')
-            AND event_date >= DATE '{year_selection}-01-01'
-            AND event_date <  DATE '{year_selection + 1}-01-01'
+            AND event_date >= make_date(:year_selection, 1, 1)
+            AND event_date <  make_date(:year_selection + 1, 1, 1)
             GROUP BY flight_id
         )
         SELECT
@@ -55,13 +55,14 @@ def load_year_data(year_selection):
         FROM flight_times ft
         INNER JOIN fact_flight ff ON ff.id   = ft.flight_id
         INNER JOIN dim_airline da ON da.icao = ff.icao_operator
-        WHERE ff.dof >= DATE '{year_selection}-01-01'
-        AND ff.dof <  DATE '{year_selection + 1}-01-01'
+        WHERE ff.dof >= make_date(:year_selection, 1, 1)
+        AND ff.dof <  make_date(:year_selection + 1, 1, 1)
         AND ft.start_ts IS NOT NULL
         AND ft.end_ts   IS NOT NULL
         AND ft.end_ts   > ft.start_ts
         ORDER BY origin;
-        """
+        """,
+        params={"year_selection": year_selection}
     )
 
 

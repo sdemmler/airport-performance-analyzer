@@ -1,27 +1,26 @@
 import pandas as pd
 import os
 import glob
-from sqlalchemy import create_engine, text
-from dotenv import load_dotenv
 from collections import defaultdict
 from io import StringIO
+from dotenv import load_dotenv, find_dotenv
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import URL
 
-# Set the working directory to the folder containing this script
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(find_dotenv())
 
+def get_engine():
+    url = URL.create(
+        "postgresql+psycopg2",
+        username=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"],
+        host=os.environ["DB_HOST"],
+        port=os.environ["DB_PORT"],
+        database=os.environ["DB_NAME"],
+    )
+    return create_engine(url, pool_pre_ping=True, pool_recycle=1800)
 
-# Load .env file
-load_dotenv()
-DB_URL = os.getenv('DATABASE_URL')
-engine = create_engine(DB_URL)
-
-
-# Empty fact tables
-with engine.connect() as conn:
-    conn.execute(text("TRUNCATE TABLE fact_flight RESTART IDENTITY CASCADE;"))
-    conn.execute(text("TRUNCATE TABLE fact_flight_event RESTART IDENTITY CASCADE;"))
-    conn.execute(text("TRUNCATE TABLE fact_measurement RESTART IDENTITY CASCADE;"))
-    conn.commit()
+engine = get_engine()
 
 
 # Years to import
