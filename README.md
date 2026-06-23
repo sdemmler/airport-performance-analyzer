@@ -77,6 +77,8 @@ PostgreSQL star schema. On top of that warehouse, the project delivers:
 | Flight data range | Jan 2022 – Mar 2026 |
 | Delay data range | Jan 2016 – Mar 2026 |
 | Weather data range | Jan 2019 – May 2026 |
+| Public Holidays | 2020 – 2027 |
+| School Holidays | 2020 – 2027 |
 
 ---
 
@@ -159,6 +161,8 @@ PostgreSQL star schema. On top of that warehouse, the project delivers:
 | [Eurocontrol PRU](https://ansperformance.eu/data) | ATFM airport delay, en-route delay, traffic | EU, 2011–present | Open |
 | [OurAirports](https://ourairports.com/data/) | Airport & runway reference data | Global | CC0 |
 | [Open-Meteo](https://open-meteo.com/) | Hourly historical weather per airport | Global, 2019–present | CC-BY 4.0 |
+| [Nager](https://date.nager.at/scalar/#api-version-3) | Public holidays per country | Global, 2020–2027 | Open |
+| [Openholidays]("https://openholidaysapi.org") | School holidays per country | Global, 2020–2027 | Open |
 
 > **Note on OPDI flight data:** The `adep_p` / `ades_p` columns in the OPDI
 > flight list represent predicted/probable airport codes derived from ADS-B
