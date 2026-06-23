@@ -246,7 +246,7 @@ airport-performance-analyzer/
 │   ├── download/
 │   │   ├── download_opdi.py          # Downloads all OPDI-Files (Source: OPDI)
 │   │   └── download_weather.py       # Downloads all Weather Data
-│   │   └── download_holidays.py       # Downloads all Holiday Data
+│   │   └── download_holidays.py      # Downloads all Holiday Data
 │   │
 │   └── import/
 │       ├── import_dimensions.py      # dim_airport, dim_runway, dim_airline, dim_entity_region
@@ -284,7 +284,7 @@ airport-performance-analyzer/
 |-------------|---------|-------|
 | Python | 3.10+ | Conda or venv recommended |
 | PostgreSQL | 14+ | Local install or Docker |
-| Disk space | ~50 GB | Full OPDI + weather dataset |
+| Disk space | ~100 GB | Full OPDI + weather dataset |
 | RAM | 8 GB+ | Recommended for large Parquet ingestion |
 
 ### Step 1 — Clone the repository
