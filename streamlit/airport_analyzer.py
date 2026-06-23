@@ -386,49 +386,18 @@ with st.sidebar:
     # st.image("") left blank to put an image later on
     st.markdown("---")
     st.subheader("References")
-    st.link_button("OPDI", "https://ansperformance.eu/data/", on_click="ignore", type="tertiary")
-    st.link_button("Eurocontrol", "https://www.eurocontrol.int/our-data" , on_click="ignore", type="tertiary")
-    st.link_button("OurAirports", "https://ourairports.com/", on_click="ignore", type="tertiary")
-    st.link_button("Openflights", "https://openflights.org/", on_click="ignore", type="tertiary")
-    st.link_button("Nager", "https://date.nager.at/scalar/#api-version-3", on_click="ignore", type="tertiary")
-    st.link_button("Holidays", "https://openholidaysapi.org/de/", on_click="ignore", type="tertiary")
-    st.link_button("Openmeteo", "https://open-meteo.com/", on_click="ignore", type="tertiary")
+    st.link_button("OPDI", "https://ansperformance.eu/data/", type="tertiary")
+    st.link_button("Eurocontrol", "https://www.eurocontrol.int/our-data" , type="tertiary")
+    st.link_button("OurAirports", "https://ourairports.com/", type="tertiary")
+    st.link_button("Openflights", "https://openflights.org/", type="tertiary")
+    st.link_button("Nager", "https://date.nager.at/scalar/#api-version-3", type="tertiary")
+    st.link_button("Holidays", "https://openholidaysapi.org/de/", type="tertiary")
+    st.link_button("Openmeteo", "https://open-meteo.com/", type="tertiary")
     st.markdown("---")
 
 # Area, which is shown on ALL pages
 
-st.subheader("📊 EU-wide summary")
-
-# Implement 4 rows
-c1, c2, c3, c4 = st.columns(4)
-
-top3_country_delay = run_query(
-    """
-    SELECT
-        CASE 
-            WHEN state_name IN ('Turkey', 'Turkiye', 'Türkiye') THEN 'Türkiye'
-            ELSE state_name
-        END AS state_name,
-        SUM(flt_arr_1) AS total_arrivals,
-        ROUND(SUM(dly_apt_arr_1) / NULLIF(SUM(flt_arr_1), 0), 2) AS avg_delay_per_arrival,
-        ROUND(SUM(flt_arr_1_dly_15)::NUMERIC / NULLIF(SUM(flt_arr_1), 0) * 100, 2) AS pct_delayed_15
-    FROM fact_airport_delay
-    WHERE flt_date < '2026-01-01'
-    GROUP BY 1
-    HAVING SUM(dly_apt_arr_1) IS NOT NULL
-    ORDER BY avg_delay_per_arrival DESC
-    LIMIT 3;
-    """
-)
-
-top3_country_delay = top3_country_delay.sort_values('avg_delay_per_arrival', ascending=True)
-
-worst = top3_country_delay.iloc[-1]   # höchster Delay (nach dem Sortieren)
-c1.metric("🌍 Worst country", worst['state_name'], f"{worst['avg_delay_per_arrival']} min")
-c2.metric(" Worst airport", "—")
-c3.metric("Worst ...", "—")
-c4.metric(" Best ...", "—")
-
+st.image("../docs/images/project_banner.svg", use_container_width=True)
 
 st.divider()
 

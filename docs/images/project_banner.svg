@@ -1,0 +1,67 @@
+<svg viewBox="0 0 1280 300" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+
+  <!-- Dark charcoal background -->
+  <rect width="1280" height="300" fill="#111827"/>
+
+  <!-- Thin top accent line -->
+  <rect x="0" y="0" width="1280" height="3" fill="#6366f1"/>
+
+  <!-- Large decorative number background (ghosted) -->
+  <text x="-20" y="280" fill="#ffffff" fill-opacity="0.03" font-size="340" font-weight="700">EU</text>
+
+  <!-- Left: Eyebrow + title -->
+  <text x="64" y="72" fill="#6366f1" font-size="11" font-weight="700" letter-spacing="4">GITHUB PORTFOLIO PROJECT  ·  DSI EDUCATION  ·  2026</text>
+
+  <text x="62" y="136" fill="#ffffff" font-size="46" font-weight="700" letter-spacing="-1">European Airport</text>
+  <text x="62" y="182" fill="#ffffff" font-size="46" font-weight="700" letter-spacing="-1">Performance Analyzer</text>
+
+  <!-- Subtitle -->
+  <text x="64" y="216" fill="#6b7280" font-size="13">ATFM delays · flight performance · weather data · 42 European countries</text>
+
+  <!-- Tech line – equal spacing -->
+  <g font-size="12">
+    <text x="64"  y="252" fill="#4b5563" font-weight="600">Stack</text>
+    <rect x="104" y="239" width="1" height="16" fill="#374151"/>
+    <text x="116" y="252" fill="#9ca3af">PostgreSQL</text>
+    <text x="200" y="252" fill="#374151">·</text>
+    <text x="212" y="252" fill="#9ca3af">Python</text>
+    <text x="268" y="252" fill="#374151">·</text>
+    <text x="280" y="252" fill="#9ca3af">pandas</text>
+    <text x="338" y="252" fill="#374151">·</text>
+    <text x="350" y="252" fill="#9ca3af">Streamlit</text>
+  </g>
+
+  <!-- Vertical rule separating left and right -->
+  <line x1="560" y1="40" x2="560" y2="260" stroke="#1f2937" stroke-width="1"/>
+
+  <!-- Right: 3 large stats in a row -->
+  <!-- Stat 1 -->
+  <g transform="translate(596 52)">
+    <rect x="0" y="0" width="3" height="130" fill="#6366f1"/>
+    <text x="18" y="28" fill="#6366f1" font-size="11" font-weight="700" letter-spacing="3">FLIGHTS</text>
+    <text x="16" y="92" fill="#ffffff" font-size="62" font-weight="700" letter-spacing="-2">62.5</text>
+    <text x="16" y="116" fill="#ffffff" font-size="22" font-weight="400">million</text>
+    <text x="16" y="148" fill="#4b5563" font-size="11">OPDI · 2022–2026</text>
+  </g>
+
+  <!-- Stat 2 -->
+  <g transform="translate(820 52)">
+    <rect x="0" y="0" width="3" height="130" fill="#0ea5e9"/>
+    <text x="18" y="28" fill="#0ea5e9" font-size="11" font-weight="700" letter-spacing="3">DELAY RECORDS</text>
+    <text x="16" y="92" fill="#ffffff" font-size="62" font-weight="700" letter-spacing="-2">1.0</text>
+    <text x="16" y="116" fill="#ffffff" font-size="22" font-weight="400">million</text>
+    <text x="16" y="148" fill="#4b5563" font-size="11">Eurocontrol · 2016–2026</text>
+  </g>
+
+  <!-- Stat 3 -->
+  <g transform="translate(1040 52)">
+    <rect x="0" y="0" width="3" height="130" fill="#f59e0b"/>
+    <text x="18" y="28" fill="#f59e0b" font-size="11" font-weight="700" letter-spacing="3">WEATHER RECORDS</text>
+    <text x="16" y="92" fill="#ffffff" font-size="62" font-weight="700" letter-spacing="-2">38.2</text>
+    <text x="16" y="116" fill="#ffffff" font-size="22" font-weight="400">million</text>
+    <text x="16" y="148" fill="#4b5563" font-size="11">Open-Meteo · 2019–2026</text>
+  </g>
+
+  <!-- Bottom rule -->
+  <line x1="560" y1="260" x2="1280" y2="260" stroke="#1f2937" stroke-width="1"/>
+</svg>
