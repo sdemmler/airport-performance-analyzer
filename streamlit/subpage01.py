@@ -250,6 +250,11 @@ if year_selection:
             plt.xticks(rotation=45, ha="right")
             plt.tight_layout()
             show(fig)
+            st.caption(
+                "Distribution of actual airborne flight durations in minutes, grouped by airline. "
+                "Only airlines with at least 30 flights on this route are shown to ensure statistical relevance. "
+                "Outliers are hidden. The red line marks the median flight duration per airline."
+            )
 
 
 st.divider()
@@ -258,7 +263,7 @@ st.divider()
 
 st.header("Deep dive Airlines")
 
-st.write("Below are the **top 5 routes** of the selected airline along with the **aircraft models** in use, covering the period **2016–2026**.")
+st.write("Below are the **top 5 routes** of the selected airline along with the **aircraft models** in use, covering the period **2022–2026**.")
 
 # Airline Selection
 
@@ -314,6 +319,10 @@ with c1:
         st.warning(f"No route data available for {airline_name} ({airline_icao}).")
         st.stop()
     st.dataframe(df_routes_display, hide_index=True)
+    st.caption(
+        "The five most frequently operated routes by the selected airline across the full data range (2022–2026), "
+        "ranked by total number of flights."
+    )
 
 with c2:
     st.subheader(f"✈️ Airplane types - {airline_name}")
@@ -321,3 +330,7 @@ with c2:
         st.warning(f"No data available for the airplane model types for {airline_name} ({airline_icao}).")
         st.stop()
     st.dataframe(df_fleet_display, hide_index=True)
+    st.caption(
+        "Aircraft models operated by the selected airline, ranked by number of recorded flights. "
+        "Based on OPDI ADS-B trajectory data."
+    )
