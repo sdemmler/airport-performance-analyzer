@@ -249,3 +249,4 @@ data/**
 
 # .gitkeep-Dateien erlauben
 !data/**/.gitkeep
+!data/raw/eurocontrol/dim_entity_region.csv

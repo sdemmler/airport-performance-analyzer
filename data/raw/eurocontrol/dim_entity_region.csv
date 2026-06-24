@@ -1,0 +1,51 @@
+entity_name,iso_country,country_name,entity_kind,notes
+ANA LUX,LU,Luxembourg,ANSP,
+ANS CR,CZ,Czechia,ANSP,
+ANS Finland,FI,Finland,ANSP,Alter Name fuer Fintraffic ANS (vor 2021)
+ARMATS,AM,Armenia,ANSP,
+AirNav Ireland,IE,Ireland,ANSP,
+Albcontrol,AL,Albania,ANSP,
+Austro Control,AT,Austria,ANSP,
+Avians,AZ,Azerbaijan,ANSP,
+Avinor,NO,Norway,ANSP,Avinor Flysikring
+BULATSA,BG,Bulgaria,ANSP,
+Belgocontrol,BE,Belgium,ANSP,Alter Name fuer skeyes (vor 2018)
+Croatia Control,HR,Croatia,ANSP,
+DCAC Cyprus,CY,Cyprus,ANSP,
+DFS,DE,Germany,ANSP,"Unterer/mittlerer Luftraum, oberer NW-Luftraum bei MUAC"
+DHMI,TR,Tuerkiye,ANSP,
+DSNA,FR,France,ANSP,
+EANS,EE,Estonia,ANSP,
+ENAIRE,ES,Spain,ANSP,inkl. Canarias-FIR (gleicher ANSP)
+ENAV,IT,Italy,ANSP,
+EUROCONTROL Area (MS),,,AGGREGATE,SUMME ueber Mitgliedsstaaten - NICHT in Laenderanalyse verwenden (Doppelzaehlung)
+Finavia,FI,Finland,ANSP,Alter Name fuer Fintraffic ANS (vor 2015)
+Fintraffic ANS,FI,Finland,ANSP,
+HASP,GR,Greece,ANSP,VERIFIZIEREN - vermutlich Hellenic Air Navigation Services Provider (Griechenland sonst nicht in Liste)
+HCAA,GR,Greece,ANSP,Alter Name fuer HASP (Hellenic Civil Aviation Authority)
+HungaroControl (EC),HU,Hungary,ANSP,Suffix (EC) = Charging-/Scope-Variante
+IAA,IE,Ireland,ANSP,Alter Name fuer AirNav Ireland (Irish Aviation Authority)
+Isavia,IS,Iceland,ANSP,
+LFV,SE,Sweden,ANSP,
+LGS,LV,Latvia,ANSP,
+LPS,SK,Slovakia,ANSP,
+LVNL,NL,Netherlands,ANSP,"Unterer Luftraum, oberer NL-Luftraum bei MUAC"
+M-NAV,MK,North Macedonia,ANSP,
+MATS,MT,Malta,ANSP,
+MOLDATSA,MD,Moldova,ANSP,
+MoldATSA,MD,Moldova,ANSP,Alter Name fuer MOLDATSA
+MUAC,,,CROSS_BORDER,"Maastricht Upper Area Control - oberer Luftraum BE/NL/LU/NW-DE - keinem Land zuordenbar, eigene Region fuehren"
+NATS (Continental),GB,United Kingdom,ANSP,Festland-UK (ohne Oceanic)
+NAV Portugal,PT,Portugal,ANSP,Volle Scope inkl. Santa Maria Oceanic - NICHT zusammen mit der Continental-Zeile summieren
+NAV Portugal (Continental),PT,Portugal,ANSP,Nur Festland-Portugal - Scope-Ueberschneidung mit NAV Portugal beachten
+NAVIAIR,DK,Denmark,ANSP,
+Oro Navigacija,LT,Lithuania,ANSP,
+PANSA,PL,Poland,ANSP,
+ROMATSA,RO,Romania,ANSP,
+SES Area (RP1),,,AGGREGATE,SUMME ueber Single-European-Sky-Raum - NICHT in Laenderanalyse verwenden (Doppelzaehlung)
+SMATSA,RS,Serbia,ANSP,Verwaltet auch montenegrinischen Luftraum
+Sakaeronavigatsia,GE,Georgia,ANSP,
+Skyguide,CH,Switzerland,ANSP,
+Slovenia Control,SI,Slovenia,ANSP,
+UkSATSE,UA,Ukraine,ANSP,
+skeyes,BE,Belgium,ANSP,"Unterer Luftraum, oberer BE-Luftraum bei MUAC"
