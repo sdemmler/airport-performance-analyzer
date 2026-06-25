@@ -11,6 +11,7 @@ from theme import apply_theme
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from sqlalchemy.engine import URL
+from pathlib import Path
 
 
 # Page definition -- only for main page
@@ -20,11 +21,14 @@ st.set_page_config(
     layout="wide",
 )
 
-# set global theme
-#apply_theme()
-
 # Load .env from /streamlit/
 load_dotenv(find_dotenv())
+
+
+# set BASE_DIR to root/main folder
+# __file__ = .../repo/streamlit/airport_analyzer.py
+# .parent.parent = main/root folder/
+BASE_DIR = Path(__file__).parent.parent
 
 
 # Connection to DB
@@ -439,7 +443,8 @@ with st.sidebar:
 
 # Area, which is shown on ALL pages
 
-st.image("../docs/images/project_banner.svg", use_container_width=True)
+svg_path = BASE_DIR / "docs" / "images" / "project_banner.svg"
+st.image(str(svg_path), use_container_width=True)
 
 st.divider()
 
